@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>End-of-Life Planning Assistant</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'EB Garamond', 'Times New Roman', Georgia, serif;
+      background: #d6cdb6;
+      color: #2b2017;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #2b2017;
+      color: #f4ead5;
+      padding: 0;
+      text-align: center;
+      border-bottom: 4px solid #bf2f38;
+    }
+
+    .header-bar {
+      background: #bf2f38;
+      height: 6px;
+    }
+
+    .header-content {
+      padding: 14px 24px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .header-maple {
+      font-size: 1.6rem;
+      line-height: 1;
+      color: #bf2f38;
+    }
+
+    header h1 {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .header-subtitle {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #c9b98a;
+      letter-spacing: 0.08em;
+    }
+
+    .header-rule {
+      width: 60%;
+      max-width: 300px;
+      border: none;
+      border-top: 1px solid #5a4a39;
+      margin: 6px auto 4px;
+    }
+
+    .header-dept {
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #9a8a6f;
+      padding-bottom: 2px;
+    }
+
+    #chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background:
+        repeating-linear-gradient(
+          transparent,
+          transparent 27px,
+          #c9bfa6 27px,
+          #c9bfa6 28px
+        );
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px 16px;
+      line-height: 1.65;
+      font-size: 1rem;
+      position: relative;
+    }
+
+    .message p:last-child { margin-bottom: 0; }
+    .message p { margin-bottom: 0.5em; }
+    .message ul, .message ol { margin: 0.5em 0 0.5em 1.5em; }
+    .message strong { color: #2b2017; }
+
+    .assistant {
+      align-self: flex-start;
+      background: #f4ead5;
+      border: 1px solid #b8a88a;
+      border-left: 3px solid #bf2f38;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 0.88rem;
+      color: #3a2e1f;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #fffdf5;
+      border: 1px solid #b8a88a;
+      border-right: 3px solid #2b2017;
+      color: #2b2017;
+    }
+
+    #input-area {
+      padding: 12px 24px;
+      background: #2b2017;
+      border-top: 4px solid #bf2f38;
+      display: flex;
+      gap: 10px;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #8a7a5f;
+      background: #f4ead5;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #2b2017;
+      outline: none;
+    }
+
+    #message-input::placeholder {
+      color: #9a8a6f;
+      font-style: italic;
+    }
+
+    #message-input:focus { border-color: #bf2f38; }
+
+    button {
+      padding: 10px 20px;
+      background: #bf2f38;
+      color: #f4ead5;
+      border: none;
+      font-family: 'EB Garamond', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    button:hover { background: #a02530; }
+    button:disabled { background: #8a6a5f; cursor: not-allowed; }
+
+    #generate-btn {
+      display: none;
+      margin: 0 24px 12px;
+      padding: 12px 24px;
+      border: 2px solid #2b2017;
+    }
+
+    #document-area {
+      display: none;
+      margin: 0 24px 24px;
+      padding: 32px;
+      background: #fffdf5;
+      border: 2px solid #2b2017;
+      border-top: 6px solid #bf2f38;
+      line-height: 1.7;
+      overflow-y: auto;
+      max-height: 50vh;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    #document-area h1 {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border-bottom: 2px solid #2b2017;
+      padding-bottom: 8px;
+      margin-top: 1em;
+      margin-bottom: 0.75em;
+      color: #2b2017;
+    }
+
+    #document-area h2 {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #b8a88a;
+      padding-bottom: 4px;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      color: #2b2017;
+    }
+
+    #document-area h3 {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      color: #3a2e1f;
+    }
+
+    .typing-indicator {
+      align-self: flex-start;
+      padding: 10px 16px;
+      background: #f4ead5;
+      border: 1px solid #b8a88a;
+      border-left: 3px solid #bf2f38;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #8a7a5f;
+      font-style: italic;
+    }
+
+    /* Scrollbar */
+    #chat-area::-webkit-scrollbar { width: 8px; }
+    #chat-area::-webkit-scrollbar-track { background: #c9bfa6; }
+    #chat-area::-webkit-scrollbar-thumb { background: #8a7a5f; }
+
+    @media (max-width: 600px) {
+      .message { max-width: 90%; }
+      #input-area { padding: 8px 12px; }
+      #chat-area { padding: 12px; }
+      #generate-btn { margin: 0 12px 8px; }
+      #document-area { margin: 0 12px 12px; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-bar"></div>
+    <div class="header-content">
+      <div class="header-maple">&#9881;</div>
+      <h1>End-of-Life Planning Assistant</h1>
+      <div class="header-subtitle">Planification de fin de vie</div>
+      <hr class="header-rule">
+      <div class="header-dept">Department of Health &amp; Welfare &middot; Minist&egrave;re de la Sant&eacute;</div>
+    </div>
+  </header>
+
+  <div id="chat-area"></div>
+
+  <button id="generate-btn" onclick="generateDocument()">Generate Planning Document</button>
+
+  <form id="input-area" onsubmit="sendMessage(event)">
+    <input id="message-input" type="text" placeholder="Type your response here..." autocomplete="off">
+    <button type="submit" id="send-btn">Send</button>
+  </form>
+
+  <div id="document-area"></div>
+
+  <script>
+    const sessionId = crypto.randomUUID();
+    const chatArea = document.getElementById('chat-area');
+    const input = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const generateBtn = document.getElementById('generate-btn');
+    const documentArea = document.getElementById('document-area');
+
+    function addMessage(role, html) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.innerHTML = html;
+      chatArea.appendChild(div);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function showTyping() {
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = 'typing';
+      div.textContent = 'Processing / Traitement en cours...';
+      chatArea.appendChild(div);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing');
+      if (el) el.remove();
+    }
+
+    async function sendMessage(e) {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage('user', marked.parse(text));
+      input.value = '';
+      sendBtn.disabled = true;
+      showTyping();
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, message: text }),
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+        const data = await res.json();
+        hideTyping();
+        addMessage('assistant', marked.parse(data.response));
+
+        if (data.complete) {
+          generateBtn.style.display = 'block';
+        }
+      } catch (err) {
+        hideTyping();
+        addMessage('assistant', `<em>Error: ${err.message}</em>`);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    async function generateDocument() {
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating / En cours...';
+
+      try {
+        const res = await fetch(`/document/${sessionId}`, { method: 'POST' });
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+        const data = await res.json();
+        documentArea.innerHTML = marked.parse(data.document);
+        documentArea.style.display = 'block';
+        generateBtn.style.display = 'none';
+        documentArea.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert('Failed to generate document: ' + err.message);
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Planning Document';
+      }
+    }
+
+    input.focus();
+  </script>
+</body>
+</html>

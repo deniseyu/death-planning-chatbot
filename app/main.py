@@ -2,14 +2,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.chat import chat, extract_structured_data
 from app.documents import render_advance_directive
 
 app = FastAPI(title="End-of-Life Planning Chatbot")
+
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +37,7 @@ class ChatResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "End-of-Life Planning Chatbot API"}
+    return FileResponse(os.path.join(_static_dir, "index.html"))
 
 
 @app.post("/chat", response_model=ChatResponse)
